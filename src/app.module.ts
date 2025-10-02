@@ -3,9 +3,8 @@ import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { pgConfig } from './config/DbConfig';
-import { getAppConfig } from './config/AppConfig';
 @Module({
-  imports: [TypeOrmModule.forRoot(pgConfig), getAppConfig],
+  imports: [TypeOrmModule.forRoot(pgConfig)],
   //controllers: [AppController],
   providers: [AppService],
 })

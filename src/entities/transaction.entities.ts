@@ -18,7 +18,6 @@ export enum TransactionType {
 
 @Entity('transactions')
 export class Transaction {
-  // ✅ Nom de classe avec majuscule
   @PrimaryGeneratedColumn()
   id: number;
 

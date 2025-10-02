@@ -14,7 +14,6 @@ export class AuthToken {
   id: number;
 
   @ManyToOne(() => User, (user) => user.authTokens, {
-    // ✅ Corrigé: authTokens au lieu de auth_token
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })

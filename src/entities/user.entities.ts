@@ -44,9 +44,9 @@ export class User {
   @OneToMany(() => Bet, (bet) => bet.user)
   bets: Bet[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.user) // ✅ Transaction au lieu de transactions
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
 
-  @OneToMany(() => AuthToken, (authToken) => authToken.user) // ✅ Ajouté
+  @OneToMany(() => AuthToken, (authToken) => authToken.user)
   authTokens: AuthToken[];
 }

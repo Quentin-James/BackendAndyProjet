@@ -1,0 +1,167 @@
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
+import { User, UserRole } from '../../entities/user.entities';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  LoginUserDto,
+  UpdateBalanceDto,
+  ChangePasswordDto,
+  UserResponseDto,
+  UserProfileDto,
+} from '../dto';
+
+@Injectable()
+export class UsersService {
+  private readonly saltRounds = 10;
+
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
+  ) {}
+
+  private toUserResponse(user: User): UserResponseDto {
+    const dto = new UserResponseDto({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      balance: Number(user.balance) as any,
+      role: user.role,
+      created_at: user.created_at,
+    });
+
+    return dto;
+  }
+
+  private toUserProfile(user: User): UserProfileDto {
+    return new UserProfileDto({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      created_at: user.created_at,
+    });
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    const { email, username, password, role } = createUserDto as any;
+
+    const existingEmail = await this.usersRepo.findOneBy({ email });
+    if (existingEmail) throw new ConflictException('Email déjà utilisé');
+
+    const existingUsername = await this.usersRepo.findOneBy({ username });
+    if (existingUsername) throw new ConflictException("Nom d'utilisateur déjà utilisé");
+
+    const password_hash = await bcrypt.hash(password, this.saltRounds);
+
+    const user = this.usersRepo.create({
+      username,
+      email,
+      password_hash,
+      balance: 0.0,
+      role: role ?? UserRole.USER,
+    } as Partial<User>);
+
+    const saved = await this.usersRepo.save(user);
+    return this.toUserResponse(saved);
+  }
+
+  async findById(id: number): Promise<UserResponseDto> {
+    const user = await this.usersRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    return this.toUserResponse(user);
+  }
+
+  async findEntityById(id: number): Promise<User> {
+    const user = await this.usersRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepo.findOneBy({ email });
+  }
+
+  async validateUser(email: string, password: string): Promise<UserResponseDto> {
+    const user = await this.findByEmail(email);
+    if (!user) throw new UnauthorizedException('Crédentials invalides');
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) throw new UnauthorizedException('Crédentials invalides');
+
+    return this.toUserResponse(user);
+  }
+
+  async update(id: number, dto: UpdateUserDto): Promise<UserResponseDto> {
+    const user = await this.findEntityById(id);
+
+    if ((dto as any).email && (dto as any).email !== user.email) {
+      const other = await this.usersRepo.findOneBy({ email: (dto as any).email });
+      if (other && other.id !== id) throw new ConflictException('Email déjà utilisé');
+    }
+
+    if ((dto as any).username && (dto as any).username !== user.username) {
+      const other = await this.usersRepo.findOneBy({ username: (dto as any).username });
+      if (other && other.id !== id) throw new ConflictException("Nom d'utilisateur déjà utilisé");
+    }
+
+    if ((dto as any).password) {
+      const newHash = await bcrypt.hash((dto as any).password, this.saltRounds);
+      user.password_hash = newHash;
+    }
+
+    // apply simple optional fields
+    if ((dto as any).username) user.username = (dto as any).username;
+    if ((dto as any).email) user.email = (dto as any).email;
+    if ((dto as any).balance !== undefined) user.balance = (dto as any).balance;
+    if ((dto as any).role) user.role = (dto as any).role;
+
+    const saved = await this.usersRepo.save(user);
+    return this.toUserResponse(saved);
+  }
+
+  async changePassword(id: number, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.findEntityById(id);
+
+    const match = await bcrypt.compare(dto.currentPassword, user.password_hash);
+    if (!match) throw new UnauthorizedException('Mot de passe actuel invalide');
+
+    const newHash = await bcrypt.hash(dto.newPassword, this.saltRounds);
+    user.password_hash = newHash;
+    await this.usersRepo.save(user);
+  }
+
+  async updateBalance(id: number, dto: UpdateBalanceDto): Promise<UserResponseDto> {
+    const user = await this.findEntityById(id);
+
+    const amount = Number(dto.amount);
+    if (!isFinite(amount) || amount < 0) throw new BadRequestException('Montant invalide');
+
+    switch ((dto as any).operation) {
+      case 'add':
+        user.balance = Number(user.balance) + amount;
+        break;
+      case 'subtract':
+        if (Number(user.balance) - amount < 0)
+          throw new BadRequestException('Solde insuffisant');
+        user.balance = Number(user.balance) - amount;
+        break;
+      case 'set':
+        user.balance = amount;
+        break;
+      default:
+        throw new BadRequestException('Opération invalide');
+    }
+
+    const saved = await this.usersRepo.save(user);
+    return this.toUserResponse(saved);
+  }
+}

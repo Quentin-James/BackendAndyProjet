@@ -1,25 +1,30 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import open from 'open';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const swaggerConfig = new DocumentBuilder()
+  // Validation globale
+  app.useGlobalPipes(new ValidationPipe());
+
+  // Configuration Swagger
+  const config = new DocumentBuilder()
     .setTitle('Esport Bet API')
-    .setDescription('API documentation for Esport Bet')
+    .setDescription('API pour les paris esport')
     .setVersion('1.0')
+    .addTag('Users', 'Gestion des utilisateurs')
+    .addTag('Bets', 'Gestion des paris')
+    .addTag('Matches', 'Gestion des matchs')
+    .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT || 3000;
   await app.listen(port);
-
-  await open(`http://localhost:${port}/api`);
-
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`Swagger documentation: http://localhost:${port}/api`);
 }

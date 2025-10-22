@@ -26,8 +26,8 @@ export const pgConfig: PostgresConnectionOptions = {
     Tournament,
     Player,
   ],
+  //passer a true pour auto sur bdd quand npm rn start
   synchronize: false,
-  migrations: ['src/migrations/*{.ts,.js}'],
   logging: true,
 };
 

@@ -6,9 +6,11 @@ import {
   IsOptional,
   IsEnum,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../entities/user.entities';
 
 export class CreateUserDto {
+  @ApiProperty()
   @IsString()
   @MinLength(3, {
     message: "Le nom d'utilisateur doit contenir au moins 3 caractères",
@@ -18,15 +20,18 @@ export class CreateUserDto {
   })
   username: string;
 
+  @ApiProperty()
   @IsEmail({}, { message: 'Email invalide' })
   email: string;
 
+  @ApiProperty()
   @IsString()
   @MinLength(6, {
     message: 'Le mot de passe doit contenir au moins 6 caractères',
   })
   password: string;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;

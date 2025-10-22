@@ -24,6 +24,12 @@ export class Bet {
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
 
+  @Column('decimal', { precision: 5, scale: 2 })
+  odds: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  potential_win: number;
+
   @Column({
     type: 'enum',
     enum: BetStatus,

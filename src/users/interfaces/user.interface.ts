@@ -13,7 +13,7 @@ export interface IUser {
 export interface ICreateUser {
   username: string;
   email: string;
-  password: string; // Mot de passe en clair (avant hachage)
+  password: string;
   role?: UserRole;
 }
 
@@ -32,7 +32,6 @@ export interface IUserResponse {
   balance: number;
   role: UserRole;
   created_at: Date;
-  // password_hash intentionnellement exclu pour la sécurité
 }
 
 export interface ILoginUser {
@@ -45,12 +44,16 @@ export interface IUserProfile {
   username: string;
   role: UserRole;
   created_at: Date;
-  // email et balance exclus pour profil public
 }
 
 export interface IChangePassword {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface IChangeEmail {
+  newEmail: string;
+  password: string;
 }
 
 export interface IUpdateBalance {

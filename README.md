@@ -27,3 +27,39 @@
 - **Custom validators** : [Custom validation classes](https://github.com/typestack/class-validator#custom-validation-classes)
 - **Nested validation** : [Validating nested objects](https://github.com/typestack/class-validator#validating-nested-objects)
 - **Conditional validation** : [Conditional validation](https://github.com/typestack/class-validator#conditional-validation)
+
+  const { password_hash, ...userResponse } = user;
+  return {
+  ...userResponse,
+  totalBets: user.bets?.length || 0,
+  totalTransactions: user.transactions?.length || 0,
+  };
+
+  ## exclus password_hash de user response dans un premier temps
+
+  ## puis fusionne user Response sans password avec les autres propriétés
+
+  ## ||0 si la valeur est null alors renvoi 0
+
+## Asyncronysme pour vérifier l'unicité(pas de username déjà utilisé)
+
+async create(createUserData: ICreateUser): Promise<IUserResponse> {
+// Vérifier l'unicité
+const existingUser = await this.userRepository.findOne({
+where: [
+{ email: createUserData.email },
+{ username: createUserData.username }
+]
+});
+
+    if (existingUser) {
+      throw new ConflictException('Email ou nom d\'utilisateur déjà utilisé');
+    }
+
+    const user = this.userRepository.create(createUserData);
+    const savedUser = await this.userRepository.save(user);
+
+    const { password_hash, ...userResponse } = savedUser;
+    return userResponse;
+
+}

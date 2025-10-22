@@ -27,3 +27,4 @@ export class UserResponseDto {
     Object.assign(this, partial);
   }
 }
+// sert à définir clairement ce que l'api retourne.

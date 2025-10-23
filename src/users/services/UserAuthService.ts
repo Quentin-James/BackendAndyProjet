@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../entities/user.entities';
+import { AuthToken } from '../../entities/auth_tokens.entities';
 import {
   ICreateUser,
   ILoginUser,
@@ -25,6 +26,8 @@ export class UserAuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(AuthToken)
+    private readonly authTokenRepository: Repository<AuthToken>,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
   ) {}
@@ -49,9 +52,11 @@ export class UserAuthService {
     return userResponse;
   }
 
-  async login(
-    loginData: ILoginUser,
-  ): Promise<{ access_token: string; user: IUserResponse }> {
+  async login(loginData: ILoginUser): Promise<{
+    access_token: string;
+    refresh_token: string;
+    user: IUserResponse;
+  }> {
     const user = await this.userService.findByEmail(loginData.email);
     if (!user) {
       throw new UnauthorizedException('Identifiants invalides');
@@ -67,13 +72,52 @@ export class UserAuthService {
 
     const payload = { sub: user.id, username: user.username, role: user.role };
     const access_token = this.jwtService.sign(payload);
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    // Sauvegarder le refresh token
+    await this.saveRefreshToken(user.id, refresh_token);
 
     const { password_hash, ...userResponse } = user;
 
     return {
       access_token,
+      refresh_token,
       user: userResponse,
     };
+  }
+
+  private async saveRefreshToken(
+    userId: number,
+    refreshToken: string,
+  ): Promise<void> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 jours
+
+    // Supprimer les anciens tokens de cet utilisateur
+    await this.authTokenRepository.delete({ user_id: userId });
+
+    await this.authTokenRepository.save({
+      user_id: userId,
+      refresh_token: refreshToken,
+      expires_at: expiresAt,
+    });
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.authTokenRepository.delete({ refresh_token: refreshToken });
+  }
+
+  async validateRefreshToken(refreshToken: string): Promise<User | null> {
+    const tokenRecord = await this.authTokenRepository.findOne({
+      where: { refresh_token: refreshToken },
+      relations: ['user'],
+    });
+
+    if (!tokenRecord || tokenRecord.expires_at < new Date()) {
+      return null;
+    }
+
+    return tokenRecord.user;
   }
 
   async changePassword(

@@ -13,7 +13,6 @@ export interface IBet {
 }
 
 export interface ICreateBet {
-  user_id: number;
   match_id: number;
   team_id: number;
   amount: number;

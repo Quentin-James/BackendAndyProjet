@@ -63,3 +63,32 @@ where: [
     return userResponse;
 
 }
+
+## Utilité du Passport pour JwtStrategy
+
+#### Dans NestJS, le JWT (JSON Web Token) est utilisé pour sécuriser les routes via l’authentification. On l’implémente souvent avec Passport et le module @nestjs/jwt. Lorsqu’un utilisateur se connecte, le serveur génère un token signé contenant ses informations (payload), que le client stocke. Les guards (JwtAuthGuard) vérifient ensuite ce token sur chaque requête pour autoriser l’accès aux routes protégées, permettant un contrôle simple et sécurisé des accès.
+
+$ npm install --save @nestjs/passport passport passport-local
+$ npm install --save-dev @types/passport-local
+
+## Config Passport
+
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { PassportStrategy } from '@nestjs/passport';
+import { Injectable } from '@nestjs/common';
+import { jwtConstants } from './constants';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+constructor() {
+super({
+jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+ignoreExpiration: false,
+secretOrKey: jwtConstants.secret,
+});
+}
+
+async validate(payload: any) {
+return { userId: payload.sub, username: payload.username };
+}
+}

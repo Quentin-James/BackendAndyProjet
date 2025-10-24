@@ -52,21 +52,12 @@ export class BetCalculationService {
   }
 
   /**
-   * Calcule le montant à miser pour gagner un montant spécifique
-   * @param targetWin Montant souhaité à gagner
-   * @param odds Cote du pari
-   * @returns Montant à miser
-   */
-  calculateStakeForTargetWin(targetWin: number, odds: number): number {
-    return Math.round((targetWin / odds) * 100) / 100;
-  }
-
-  /**
    * Calcule le retour sur investissement (ROI)
    * @param totalStaked Montant total misé
    * @param totalReturned Montant total récupéré
    * @returns ROI en pourcentage
    */
+  //Utile pour les statistiques globales du joueur (win rate, ROI).
   calculateROI(totalStaked: number, totalReturned: number): number {
     if (totalStaked === 0) return 0;
     const roi = ((totalReturned - totalStaked) / totalStaked) * 100;

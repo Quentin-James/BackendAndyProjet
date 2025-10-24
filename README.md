@@ -92,3 +92,12 @@ async validate(payload: any) {
 return { userId: payload.sub, username: payload.username };
 }
 }
+
+## resynchroniser les id sql si besoin
+
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+
+## Pourquoi une cote implicite ?
+
+La cote implicite est la probabilité que l’événement se produise selon le bookmaker.
+Autrement dit, elle te dit la chance estimée qu’une équipe gagne (ou qu’un événement se produise) d’après la cote proposée.

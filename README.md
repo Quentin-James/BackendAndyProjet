@@ -101,3 +101,6 @@ SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 
 La cote implicite est la probabilité que l’événement se produise selon le bookmaker.
 Autrement dit, elle te dit la chance estimée qu’une équipe gagne (ou qu’un événement se produise) d’après la cote proposée.
+
+## user subscriber
+Fait avec IA pour lier l auth a mon user sans modifer mes entités

@@ -6,12 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { pgConfig } from './config/DbConfig';
 import { ConfigModule } from '@nestjs/config';
 import { BetModule } from './auth/auth/bet.module';
+import { UserSubscriber } from './subscriber/user.subscriber';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // dispo partout dans ton app
     }),
-    TypeOrmModule.forRoot(pgConfig),
+    TypeOrmModule.forRoot({
+      ...pgConfig,
+      subscribers: [UserSubscriber],
+    }),
     UsersModule,
     BetModule,
   ],

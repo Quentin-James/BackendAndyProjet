@@ -12,7 +12,7 @@ import { Player } from '../entities/player.entities';
 export const pgConfig: PostgresConnectionOptions = {
   type: 'postgres',
   host: 'localhost',
-  port: 5433,
+  port: 5432,
   username: 'parieur',
   password: 'parieur',
   database: 'andybdd',
